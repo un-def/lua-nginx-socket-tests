@@ -2,11 +2,7 @@ local cjson = require('cjson')
 
 local _M = {}
 
-_M.nargs = function(...)
-    return select('#', ...), ...
-end
-
-_M.repr = function(...)
+local repr = function(...)
     local tbl = {...}
     for i = 1, select('#', ...) do
         if tbl[i] == nil then
@@ -14,6 +10,12 @@ _M.repr = function(...)
         end
     end
     return cjson.encode(tbl)
+end
+
+_M.repr = repr
+
+_M.rrepr = function(...)
+    return repr(...), ...
 end
 
 return _M
