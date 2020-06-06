@@ -106,22 +106,6 @@ deadbeefdeadf00d
 [""]
 [""]
 
-=== size, negative
---- http_config eval: $::HttpConfig
---- config
-    location /t {
-        content_by_lua_block {
-            local testlib = require('testlib')
-            local sock = ngx.req.socket()
-            ngx.say(testlib.repr(pcall(sock.receive, sock, -1)))
-        }
-    }
---- request
-POST /t
-deadbeefdeadf00d
---- response_body
-[false,"bad argument #2 to '?' (bad pattern argument)"]
-
 === size, number-like
 --- http_config eval: $::HttpConfig
 --- config
@@ -166,7 +150,23 @@ Content-Length: 20
 ["deadbeef\r\nde"]
 [null,"closed","adf00d\r\n"]
 
-=== pattern, bad pattern
+=== bad pattern, nil
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receive, sock, nil)))
+        }
+    }
+--- request
+POST /t
+deadbeefdeadf00d
+--- response_body
+[false,"bad argument #2 to '?' (bad pattern argument)"]
+
+=== bad pattern, unsupported string pattern
 --- http_config eval: $::HttpConfig
 --- config
     location /t {
@@ -181,6 +181,70 @@ POST /t
 deadbeef
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument: foo)"]
+
+=== bad pattern, boolean
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receive, sock, true)))
+        }
+    }
+--- request
+POST /t
+deadbeefdeadf00d
+--- response_body
+[false,"bad argument #2 to '?' (bad pattern argument)"]
+
+=== bad pattern, table
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receive, sock, {})))
+        }
+    }
+--- request
+POST /t
+deadbeefdeadf00d
+--- response_body
+[false,"bad argument #2 to '?' (bad pattern argument)"]
+
+=== bad pattern, negative number
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receive, sock, -1)))
+        }
+    }
+--- request
+POST /t
+deadbeefdeadf00d
+--- response_body
+[false,"bad argument #2 to '?' (bad pattern argument)"]
+
+=== bad pattern, negative number-like string
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receive, sock, '-1')))
+        }
+    }
+--- request
+POST /t
+deadbeefdeadf00d
+--- response_body
+[false,"bad argument #2 to '?' (bad pattern argument)"]
 
 === pattern, '*a'
 --- http_config eval: $::HttpConfig
