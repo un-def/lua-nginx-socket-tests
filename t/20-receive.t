@@ -341,15 +341,14 @@ Content-Length: 32
         content_by_lua_block {
             local testlib = require('testlib')
             local sock = ngx.socket.tcp()
-            sock:settimeout(50)
             local ok, err = sock:connect('127.0.0.1', $TEST_NGINX_SERVER_PORT)
             sock:send('GET /slow HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n')
-            ngx.say(testlib.repr(sock:receive(1024)))
+            sock:settimeout(50)
+            ngx.say(testlib.repr(sock:receive('*a')))
             sock:close()
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [null,"timeout",""]

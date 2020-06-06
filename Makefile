@@ -1,6 +1,7 @@
-OPENRESTY_PREFIX=/usr/local/openresty
+OPENRESTY_PREFIX := /usr/local/openresty
+T := t
 
 .PHONY: test
 
 test:
-	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -v -r t
+	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -v -r $(T)
