@@ -95,6 +95,8 @@ deadbeef
             for _ = 1, 4 do
                 ngx.say(testlib.repr(sock:receive(0)))
             end
+            sock:receive(1024)
+            ngx.say(testlib.repr(sock:receive(0)))
         }
     }
 --- request
@@ -105,6 +107,30 @@ deadbeefdeadf00d
 [""]
 [""]
 [""]
+[null,"closed"]
+
+=== size, float
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(sock:receive(2.1)))
+            ngx.say(testlib.repr(sock:receive(2.9)))
+            ngx.say(testlib.repr(sock:receive(3.1)))
+            ngx.say(testlib.repr(sock:receive(3.9)))
+
+        }
+    }
+--- request
+POST /t
+deadbeefdeadf00d
+--- response_body
+["de"]
+["ad"]
+["bee"]
+["fde"]
 
 === size, number-like
 --- http_config eval: $::HttpConfig
