@@ -5,8 +5,11 @@ local _M = {}
 local repr = function(...)
     local tbl = {...}
     for i = 1, select('#', ...) do
-        if tbl[i] == nil then
+        local value = tbl[i]
+        if value == nil then
             tbl[i] = cjson.null
+        elseif type(value) == 'function' then
+            tbl[i] = '<function>'
         end
     end
     return cjson.encode(tbl)

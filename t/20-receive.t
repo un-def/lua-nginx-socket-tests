@@ -197,9 +197,9 @@ deadbeefdeadf00d
 --- config
     location /t {
         content_by_lua_block {
-            local repr = require('testlib').repr
+            local testlib = require('testlib')
             local sock = ngx.req.socket()
-            ngx.say(repr(pcall(sock.receive, sock, 'foo')))
+            ngx.say(testlib.repr(pcall(sock.receive, sock, 'foo')))
         }
     }
 --- request
@@ -304,8 +304,8 @@ deadbeefdeadf00d
             local testlib = require('testlib')
             local sock = ngx.req.socket()
             repeat
-                local repr, _, err = testlib.rrepr(sock:receive('*l'))
-                ngx.say(repr)
+                local r, _, err = testlib.rrepr(sock:receive('*l'))
+                ngx.say(r)
             until err
             ngx.say(testlib.repr(sock:receive('*l')))
             ngx.say(testlib.repr(sock:receive('*l')))
@@ -333,8 +333,8 @@ Content-Length: 28
             local testlib = require('testlib')
             local sock = ngx.req.socket()
             repeat
-                local repr, _, err = testlib.rrepr(sock:receive('*l'))
-                ngx.say(repr)
+                local r, _, err = testlib.rrepr(sock:receive('*l'))
+                ngx.say(r)
             until err
             ngx.say(testlib.repr(sock:receive('*l')))
             ngx.say(testlib.repr(sock:receive('*l')))
@@ -365,8 +365,8 @@ Content-Length: 32
             local testlib = require('testlib')
             local sock = ngx.req.socket()
             repeat
-                local repr, _, err = testlib.rrepr(sock:receive())
-                ngx.say(repr)
+                local r, _, err = testlib.rrepr(sock:receive())
+                ngx.say(r)
             until err
             ngx.say(testlib.repr(sock:receive()))
             ngx.say(testlib.repr(sock:receive()))
@@ -394,8 +394,8 @@ Content-Length: 28
             local testlib = require('testlib')
             local sock = ngx.req.socket()
             repeat
-                local repr, _, err = testlib.rrepr(sock:receive())
-                ngx.say(repr)
+                local r, _, err = testlib.rrepr(sock:receive())
+                ngx.say(r)
             until err
             ngx.say(testlib.repr(sock:receive()))
             ngx.say(testlib.repr(sock:receive()))
