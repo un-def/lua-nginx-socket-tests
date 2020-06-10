@@ -316,16 +316,16 @@ deadbeef--dead--f00d--trailer
             local testlib = require('testlib')
             local sock = ngx.req.socket()
             local iter = sock:receiveuntil('--')
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter()))
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter(4)))
-            ngx.say(testlib.repr(iter()))
-            ngx.say(testlib.repr(iter()))
+            ngx.say(testlib.repr(iter(4)))      -- dead
+            ngx.say(testlib.repr(iter(4)))      -- beef
+            ngx.say(testlib.repr(iter()))       -- ''
+            ngx.say(testlib.repr(iter(4)))      -- dead
+            ngx.say(testlib.repr(iter(4)))      -- ''
+            ngx.say(testlib.repr(iter(4)))      -- nil, nil, nil
+            ngx.say(testlib.repr(iter(4)))      -- f00d
+            ngx.say(testlib.repr(iter(4)))      -- ''
+            ngx.say(testlib.repr(iter()))       -- nil, nil, nil
+            ngx.say(testlib.repr(iter()))       -- nil, closed, trailer
         }
     }
 --- request
@@ -510,6 +510,41 @@ receive: ["0d--"]
 iter: ["trai"]
 receive: ["ler"]
 iter: [null,"closed",""]
+
+=== iterator and receive, pattern discard
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            local iter = sock:receiveuntil('--')
+            ngx.say('iter: ', testlib.repr(iter(4)))                -- deadbeef
+            ngx.say('receive: ', testlib.repr(sock:receive(4)))     -- --be
+            ngx.say('iter: ', testlib.repr(iter()))                 -- ef
+            ngx.say('receive: ', testlib.repr(sock:receive(2)))     -- de
+            ngx.say('iter: ', testlib.repr(iter(2)))                -- ad
+            ngx.say('iter: ', testlib.repr(iter()))                 -- ''
+            ngx.say('receive: ', testlib.repr(sock:receive(2)))     -- f0
+            ngx.say('iter: ', testlib.repr(iter(4)))                -- 0d
+            ngx.say('iter: ', testlib.repr(iter()))                 -- nil, nil, nil
+            ngx.say('iter: ', testlib.repr(iter()))                 -- nil, 'closed', 'trailer'
+        }
+    }
+--- request
+POST /t
+dead--beef--dead--f00d--trailer
+--- response_body
+iter: ["dead"]
+receive: ["--be"]
+iter: ["ef"]
+receive: ["de"]
+iter: ["ad"]
+iter: [""]
+receive: ["f0"]
+iter: ["0d"]
+iter: [null,null,null]
+iter: [null,"closed","trailer"]
 
 === 2 iterators and receive mixed
 --- http_config eval: $::HttpConfig
