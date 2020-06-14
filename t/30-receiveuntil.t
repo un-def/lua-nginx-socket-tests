@@ -51,6 +51,30 @@ deadbeef--deadf00d--trailer
 [false,"bad argument #2 to '?' (string expected, got table)"]
 [false,"bad argument #2 to '?' (string expected, got function)"]
 
+=== bad options value type
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', nil)))
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', true)))
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', '')))
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', 2)))
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', function() end)))
+        }
+    }
+--- request
+POST /t
+deadbeef--deadf00d--trailer
+--- response_body
+[false,"bad argument #3 to '?' (table expected, got nil)"]
+[false,"bad argument #3 to '?' (table expected, got boolean)"]
+[false,"bad argument #3 to '?' (table expected, got string)"]
+[false,"bad argument #3 to '?' (table expected, got number)"]
+[false,"bad argument #3 to '?' (table expected, got function)"]
+
 === empty pattern
 --- http_config eval: $::HttpConfig
 --- config
