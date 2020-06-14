@@ -27,6 +27,40 @@ deadbeef--deadf00d--trailer
 --- response_body
 ["<function>"]
 
+=== too few args
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receiveuntil)))
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock)))
+        }
+    }
+--- request
+POST /t
+deadbeef--deadf00d--trailer
+--- response_body
+[false,"expecting 2 or 3 arguments (including the object), but got 0"]
+[false,"expecting 2 or 3 arguments (including the object), but got 1"]
+
+=== too many args
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', {}, false)))
+        }
+    }
+--- request
+POST /t
+deadbeef--deadf00d--trailer
+--- response_body
+[false,"expecting 2 or 3 arguments (including the object), but got 4"]
+
 === bad pattern value type
 --- http_config eval: $::HttpConfig
 --- config
@@ -34,7 +68,6 @@ deadbeef--deadf00d--trailer
         content_by_lua_block {
             local testlib = require('testlib')
             local sock = ngx.req.socket()
-            ngx.say(testlib.repr(pcall(sock.receiveuntil, sock)))
             ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, nil)))
             ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, true)))
             ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, {})))
@@ -45,7 +78,6 @@ deadbeef--deadf00d--trailer
 POST /t
 deadbeef--deadf00d--trailer
 --- response_body
-[false,"expecting 2 or 3 arguments (including the object), but got 1"]
 [false,"bad argument #2 to '?' (string expected, got nil)"]
 [false,"bad argument #2 to '?' (string expected, got boolean)"]
 [false,"bad argument #2 to '?' (string expected, got table)"]
@@ -74,6 +106,26 @@ deadbeef--deadf00d--trailer
 [false,"bad argument #3 to '?' (table expected, got string)"]
 [false,"bad argument #3 to '?' (table expected, got number)"]
 [false,"bad argument #3 to '?' (table expected, got function)"]
+
+=== bad inclusive option value
+--- http_config eval: $::HttpConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.req.socket()
+            for _, v in ipairs({'s', 1, {}}) do
+                ngx.say(testlib.repr(pcall(sock.receiveuntil, sock, '--', {inclusive = v})))
+            end
+        }
+    }
+--- request
+POST /t
+deadbeef--deadf00d--trailer
+--- response_body
+[false,"bad \"inclusive\" option value type: string"]
+[false,"bad \"inclusive\" option value type: number"]
+[false,"bad \"inclusive\" option value type: table"]
 
 === empty pattern
 --- http_config eval: $::HttpConfig
