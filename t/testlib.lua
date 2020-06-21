@@ -23,8 +23,10 @@ _M.rrepr = function(...)
     return repr(...), ...
 end
 
-_M.tcp = function()
-    local sock = ngx.socket.tcp()
+_M.tcp_connect = function(sock)
+    if not sock then
+        sock = ngx.socket.tcp()
+    end
     assert(sock:connect(TEST_SOCKET_HOST, os.getenv('TEST_SOCKET_PORT')))
     return sock
 end

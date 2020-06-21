@@ -15,7 +15,7 @@ __DATA__
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             for _ = 1, 3 do
                 ngx.say(testlib.repr(sock:close()))
             end
@@ -29,6 +29,27 @@ deadbeefdeadf00d
 [null,"closed"]
 [null,"closed"]
 
+=== close not connected
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadf00d')
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.socket.tcp()
+            for _ = 1, 3 do
+                ngx.say(testlib.repr(sock:close()))
+            end
+        }
+    }
+--- request
+GET /t
+deadbeefdeadf00d
+--- response_body
+[null,"closed"]
+[null,"closed"]
+[null,"closed"]
+
 === close after timeout error
 --- http_config eval: $Testlib::HttpConfig
 --- main_config eval: Testlib::socket_lua_block_config('ngx.sleep(1); ngx.print("slow response")')
@@ -36,7 +57,7 @@ deadbeefdeadf00d
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             sock:settimeout(50)
             ngx.say(testlib.repr(sock:receive('*a')))
             for _ = 1, 3 do
@@ -59,7 +80,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(sock:receive('*a')))
             for _ = 1, 3 do
                 ngx.say(testlib.repr(sock:close()))

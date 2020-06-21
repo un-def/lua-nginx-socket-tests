@@ -8,6 +8,29 @@ run_tests();
 
 __DATA__
 
+=== not connected, pattern should not be checked
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = ngx.socket.tcp()
+            for _, pattern in ipairs({0, 1, -1, 'bad', {}, false}) do
+                ngx.say(testlib.repr(sock:receive(pattern)))
+            end
+        }
+    }
+--- request
+GET /t
+--- response_body
+[null,"closed"]
+[null,"closed"]
+[null,"closed"]
+[null,"closed"]
+[null,"closed"]
+[null,"closed"]
+
 === size, partial
 --- http_config eval: $Testlib::HttpConfig
 --- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
@@ -15,7 +38,7 @@ __DATA__
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(5))
                 ngx.say(r)
@@ -41,7 +64,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(8))
                 ngx.say(r)
@@ -66,7 +89,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(20))
                 ngx.say(r)
@@ -89,7 +112,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             for _ = 1, 2 do
                 ngx.say(testlib.repr(sock:receive(0)))
             end
@@ -122,7 +145,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(sock:receive(2.1)))
             ngx.say(testlib.repr(sock:receive(2.9)))
             ngx.say(testlib.repr(sock:receive(3.1)))
@@ -145,7 +168,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(' \t 5\r\n '))
                 ngx.say(r)
@@ -167,7 +190,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(12))
                 ngx.say(r)
@@ -187,7 +210,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(pcall(sock.receive, sock, nil)))
         }
     }
@@ -203,7 +226,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(pcall(sock.receive, sock, 'foo')))
         }
     }
@@ -219,7 +242,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(pcall(sock.receive, sock, true)))
         }
     }
@@ -235,7 +258,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(pcall(sock.receive, sock, {})))
         }
     }
@@ -251,7 +274,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(pcall(sock.receive, sock, -1)))
         }
     }
@@ -267,7 +290,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(pcall(sock.receive, sock, '-1')))
         }
     }
@@ -283,7 +306,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             for _ = 1, 4 do
                 ngx.say(testlib.repr(sock:receive('*a')))
             end
@@ -310,7 +333,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             ngx.say(testlib.repr(sock:receive('*a')))
             for _ = 1, 3 do
                 ngx.say(testlib.repr(sock:receive(1)))
@@ -332,7 +355,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive('*l'))
                 ngx.say(r)
@@ -359,7 +382,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive('*l'))
                 ngx.say(r)
@@ -389,7 +412,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive())
                 ngx.say(r)
@@ -416,7 +439,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive())
                 ngx.say(r)
@@ -446,7 +469,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp()
+            local sock = testlib.tcp_connect()
             sock:settimeout(50)
             ngx.say(testlib.repr(sock:receive('*a')))
             sock:close()
