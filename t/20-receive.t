@@ -82,19 +82,25 @@ GET /t
 [null,"closed"]
 [null,"closed"]
 
-=== size, zero
+=== size, zero, does not close connection
 --- http_config eval: $Testlib::HttpConfig
---- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
+--- main_config eval: Testlib::socket_response_config('deadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
             local sock = testlib.tcp()
-            for _ = 1, 4 do
+            for _ = 1, 2 do
                 ngx.say(testlib.repr(sock:receive(0)))
             end
-            sock:receive(1024)
-            ngx.say(testlib.repr(sock:receive(0)))
+            ngx.say(testlib.repr(sock:receive(8)))
+            for _ = 1, 2 do
+                ngx.say(testlib.repr(sock:receive(0)))
+            end
+            ngx.say(testlib.repr(sock:receive(1)))
+            for _ = 1, 2 do
+                ngx.say(testlib.repr(sock:receive(0)))
+            end
         }
     }
 --- request
@@ -102,8 +108,11 @@ GET /t
 --- response_body
 [""]
 [""]
+["deadf00d"]
 [""]
 [""]
+[null,"closed",""]
+[null,"closed"]
 [null,"closed"]
 
 === size, float
@@ -278,6 +287,10 @@ GET /t
             for _ = 1, 4 do
                 ngx.say(testlib.repr(sock:receive('*a')))
             end
+            sock:close()
+            for _ = 1, 2 do
+                ngx.say(testlib.repr(sock:receive('*a')))
+            end
         }
     }
 --- request
@@ -287,6 +300,30 @@ GET /t
 [""]
 [""]
 [""]
+[null,"closed"]
+[null,"closed"]
+
+=== pattern, '*a', does not close connection
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeef\r\ndeadf00d\r\n')
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = testlib.tcp()
+            ngx.say(testlib.repr(sock:receive('*a')))
+            for _ = 1, 3 do
+                ngx.say(testlib.repr(sock:receive(1)))
+            end
+        }
+    }
+--- request
+GET /t
+--- response_body
+["deadbeef\r\ndeadf00d\r\n"]
+[null,"closed",""]
+[null,"closed"]
+[null,"closed"]
 
 === pattern, '*l'
 --- http_config eval: $Testlib::HttpConfig
