@@ -1,7 +1,9 @@
 OPENRESTY_PREFIX := /usr/local/openresty
-T := t
+export TEST_SOCKET_PORT ?= 1985
+export PERL5LIB := $(CURDIR)/t:$(PERL5LIB)
+export PATH := $(OPENRESTY_PREFIX)/nginx/sbin:$(PATH)
 
 .PHONY: test
-
+test: T := t
 test:
-	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -v -r $(T)
+	prove -v -r $(T)

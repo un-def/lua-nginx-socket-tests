@@ -1,5 +1,7 @@
 local cjson = require('cjson')
 
+local TEST_SOCKET_HOST = '127.0.0.1'
+
 local _M = {}
 
 local repr = function(...)
@@ -19,6 +21,12 @@ _M.repr = repr
 
 _M.rrepr = function(...)
     return repr(...), ...
+end
+
+_M.tcp = function()
+    local sock = ngx.socket.tcp()
+    assert(sock:connect(TEST_SOCKET_HOST, os.getenv('TEST_SOCKET_PORT')))
+    return sock
 end
 
 return _M

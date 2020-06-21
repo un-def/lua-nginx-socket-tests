@@ -1,8 +1,5 @@
 use Test::Nginx::Socket;
-
-our $HttpConfig = q{
-    lua_package_path "$prefix/../?.lua;;";
-};
+use Testlib;
 
 plan tests => repeat_each() * 2 * blocks();
 no_long_string();
@@ -12,12 +9,13 @@ run_tests();
 __DATA__
 
 === size, partial
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(5))
                 ngx.say(r)
@@ -27,8 +25,7 @@ __DATA__
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 ["deadb"]
 ["eefde"]
@@ -38,12 +35,13 @@ deadbeefdeadf00d
 [null,"closed"]
 
 === size, empty partial
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(8))
                 ngx.say(r)
@@ -53,8 +51,7 @@ deadbeefdeadf00d
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 ["deadbeef"]
 ["deadf00d"]
@@ -63,12 +60,13 @@ deadbeefdeadf00d
 [null,"closed"]
 
 === size, more than body
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeef')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(20))
                 ngx.say(r)
@@ -78,20 +76,20 @@ deadbeefdeadf00d
         }
     }
 --- request
-POST /t
-deadbeef
+GET /t
 --- response_body
 [null,"closed","deadbeef"]
 [null,"closed"]
 [null,"closed"]
 
 === size, zero
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             for _ = 1, 4 do
                 ngx.say(testlib.repr(sock:receive(0)))
             end
@@ -100,8 +98,7 @@ deadbeef
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [""]
 [""]
@@ -110,12 +107,13 @@ deadbeefdeadf00d
 [null,"closed"]
 
 === size, float
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(sock:receive(2.1)))
             ngx.say(testlib.repr(sock:receive(2.9)))
             ngx.say(testlib.repr(sock:receive(3.1)))
@@ -124,8 +122,7 @@ deadbeefdeadf00d
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 ["de"]
 ["ad"]
@@ -133,12 +130,13 @@ deadbeefdeadf00d
 ["fde"]
 
 === size, number-like
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(' \t 5\r\n '))
                 ngx.say(r)
@@ -146,8 +144,7 @@ deadbeefdeadf00d
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 ["deadb"]
 ["eefde"]
@@ -155,141 +152,136 @@ deadbeefdeadf00d
 [null,"closed","d"]
 
 === size, CR are preserved
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeef\r\ndeadf00d\r\n')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive(12))
                 ngx.say(r)
             until err
         }
     }
---- request eval
-"POST /t
-deadbeef\r\ndeadf00d\r\n"
---- more_headers
-Content-Length: 20
+--- request
+GET /t
 --- response_body
 ["deadbeef\r\nde"]
 [null,"closed","adf00d\r\n"]
 
 === bad pattern, nil
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(pcall(sock.receive, sock, nil)))
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument)"]
 
 === bad pattern, unsupported string pattern
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeef')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(pcall(sock.receive, sock, 'foo')))
         }
     }
 --- request
-POST /t
-deadbeef
+GET /t
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument: foo)"]
 
 === bad pattern, boolean
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(pcall(sock.receive, sock, true)))
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument)"]
 
 === bad pattern, table
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(pcall(sock.receive, sock, {})))
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument)"]
 
 === bad pattern, negative number
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(pcall(sock.receive, sock, -1)))
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument)"]
 
 === bad pattern, negative number-like string
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeefdeadf00d')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             ngx.say(testlib.repr(pcall(sock.receive, sock, '-1')))
         }
     }
 --- request
-POST /t
-deadbeefdeadf00d
+GET /t
 --- response_body
 [false,"bad argument #2 to '?' (bad pattern argument)"]
 
 === pattern, '*a'
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('deadbeef\r\ndeadf00d\r\n')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             for _ = 1, 4 do
                 ngx.say(testlib.repr(sock:receive('*a')))
             end
         }
     }
---- request eval
-"POST /t
-deadbeef\r\ndeadf00d\r\n"
---- more_headers
-Content-Length: 20
-deadbeefdeadf00d
+--- request
+GET /t
 --- response_body
 ["deadbeef\r\ndeadf00d\r\n"]
 [""]
@@ -297,12 +289,13 @@ deadbeefdeadf00d
 [""]
 
 === pattern, '*l'
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive('*l'))
                 ngx.say(r)
@@ -311,11 +304,8 @@ deadbeefdeadf00d
             ngx.say(testlib.repr(sock:receive('*l')))
         }
     }
---- request eval
-"POST /t
-\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r"
---- more_headers
-Content-Length: 28
+--- request
+GET /t
 --- response_body
 [""]
 ["dead"]
@@ -326,12 +316,13 @@ Content-Length: 28
 [null,"closed"]
 
 === pattern, '*l', trailing newline
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r\n\r\n\n')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive('*l'))
                 ngx.say(r)
@@ -340,11 +331,8 @@ Content-Length: 28
             ngx.say(testlib.repr(sock:receive('*l')))
         }
     }
---- request eval
-"POST /t
-\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r\n\r\n\n"
---- more_headers
-Content-Length: 32
+--- request
+GET /t
 --- response_body
 [""]
 ["dead"]
@@ -358,12 +346,13 @@ Content-Length: 32
 [null,"closed"]
 
 === pattern, no arg
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive())
                 ngx.say(r)
@@ -372,11 +361,8 @@ Content-Length: 32
             ngx.say(testlib.repr(sock:receive()))
         }
     }
---- request eval
-"POST /t
-\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r"
---- more_headers
-Content-Length: 28
+--- request
+GET /t
 --- response_body
 [""]
 ["dead"]
@@ -387,12 +373,13 @@ Content-Length: 28
 [null,"closed"]
 
 === pattern, no arg, trailing newline
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_response_config('\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r\n\r\n\n')
 --- config
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.req.socket()
+            local sock = testlib.tcp()
             repeat
                 local r, _, err = testlib.rrepr(sock:receive())
                 ngx.say(r)
@@ -401,11 +388,8 @@ Content-Length: 28
             ngx.say(testlib.repr(sock:receive()))
         }
     }
---- request eval
-"POST /t
-\r\r\r\n\rdead\n\r\nbeef\r\ndead\rf00d\r\n\r\n\n"
---- more_headers
-Content-Length: 32
+--- request
+GET /t
 --- response_body
 [""]
 ["dead"]
@@ -419,20 +403,13 @@ Content-Length: 32
 [null,"closed"]
 
 === timeout
---- http_config eval: $::HttpConfig
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: Testlib::socket_lua_block_config('ngx.sleep(1); ngx.print("slow response")')
 --- config
-    location /slow {
-        content_by_lua_block {
-            ngx.sleep(1)
-            ngx.say("slow response")
-        }
-    }
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.socket.tcp()
-            local ok, err = sock:connect('127.0.0.1', $TEST_NGINX_SERVER_PORT)
-            sock:send('GET /slow HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n')
+            local sock = testlib.tcp()
             sock:settimeout(50)
             ngx.say(testlib.repr(sock:receive('*a')))
             sock:close()
