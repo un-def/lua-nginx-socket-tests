@@ -23,11 +23,19 @@ _M.rrepr = function(...)
     return repr(...), ...
 end
 
-_M.tcp_connect = function(sock)
-    if not sock then
-        sock = ngx.socket.tcp()
+local tcp_connect = function(sock, host, port, options)
+    host = host or TEST_SOCKET_HOST
+    port = port or os.getenv('TEST_SOCKET_PORT')
+    return assert(sock:connect(host, port, options))
+end
+
+_M.tcp_connect = tcp_connect
+
+_M.tcp = function(connected)
+    local sock = assert(ngx.socket.tcp())
+    if connected then
+        tcp_connect(sock)
     end
-    assert(sock:connect(TEST_SOCKET_HOST, os.getenv('TEST_SOCKET_PORT')))
     return sock
 end
 

@@ -15,7 +15,7 @@ __DATA__
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter())
@@ -39,7 +39,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter())
@@ -63,7 +63,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter(4))
@@ -94,7 +94,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter(7))
@@ -123,7 +123,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter(5))
@@ -151,7 +151,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter(16))
@@ -177,7 +177,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('-==-', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter(2))
@@ -214,7 +214,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('--', {inclusive = true})
             repeat
                 local r, _, err = testlib.rrepr(iter(16))
@@ -240,7 +240,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             local iter = sock:receiveuntil('-==-', {inclusive = true})
             ngx.say(testlib.repr(iter(4)))      -- dead
             ngx.say(testlib.repr(iter(5)))      -- beef-==-

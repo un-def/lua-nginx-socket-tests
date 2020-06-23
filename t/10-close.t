@@ -15,7 +15,7 @@ __DATA__
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             for _ = 1, 3 do
                 ngx.say(testlib.repr(sock:close()))
             end
@@ -23,7 +23,6 @@ __DATA__
     }
 --- request
 GET /t
-deadbeefdeadf00d
 --- response_body
 [1]
 [null,"closed"]
@@ -36,7 +35,7 @@ deadbeefdeadf00d
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = ngx.socket.tcp()
+            local sock = testlib.tcp(false)
             for _ = 1, 3 do
                 ngx.say(testlib.repr(sock:close()))
             end
@@ -44,7 +43,6 @@ deadbeefdeadf00d
     }
 --- request
 GET /t
-deadbeefdeadf00d
 --- response_body
 [null,"closed"]
 [null,"closed"]
@@ -57,7 +55,7 @@ deadbeefdeadf00d
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             sock:settimeout(50)
             ngx.say(testlib.repr(sock:receive('*a')))
             for _ = 1, 3 do
@@ -80,7 +78,7 @@ GET /t
     location /t {
         content_by_lua_block {
             local testlib = require('testlib')
-            local sock = testlib.tcp_connect()
+            local sock = testlib.tcp(true)
             ngx.say(testlib.repr(sock:receive('*a')))
             for _ = 1, 3 do
                 ngx.say(testlib.repr(sock:close()))
