@@ -1,8 +1,17 @@
 local cjson = require('cjson')
 
-local TEST_SOCKET_HOST = '127.0.0.1'
-
 local _M = {}
+
+local _host = '127.0.0.1'
+
+local get_port = function()
+    local port = os.getenv('TEST_SOCKET_PORT')
+    assert(port, 'TEST_SOCKET_PORT is not set')
+    return port
+end
+
+_M.host = _host
+_M.get_port = get_port
 
 local repr = function(...)
     local tbl = {...}
@@ -24,8 +33,8 @@ _M.rrepr = function(...)
 end
 
 local tcp_connect = function(sock, host, port, options)
-    host = host or TEST_SOCKET_HOST
-    port = port or os.getenv('TEST_SOCKET_PORT')
+    host = host or _host
+    port = port or get_port()
     return assert(sock:connect(host, port, options))
 end
 
