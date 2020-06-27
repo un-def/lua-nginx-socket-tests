@@ -21,6 +21,8 @@ local repr = function(...)
             tbl[i] = cjson.null
         elseif type(value) == 'function' then
             tbl[i] = '<function>'
+        elseif type(value) == 'userdata' then
+            tbl[i] = '<userdata>'
         end
     end
     return cjson.encode(tbl)
