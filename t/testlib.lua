@@ -2,6 +2,8 @@ local cjson = require('cjson')
 
 local _M = {}
 
+_M.NIL = {}
+
 local _host = '127.0.0.1'
 
 local get_port = function()
