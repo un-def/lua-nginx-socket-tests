@@ -211,7 +211,7 @@ GET /t
         content_by_lua_block {
             local testlib = require('testlib')
             local sock = testlib.tcp(true)
-            local tbl = {'foo', {'1.23', {'-432', '0.33'}, 'bar', 'baz'}, 'qux'}
+            local tbl = {'foo', {1.23, {-432, 0.33}, 'bar', 'baz'}, 'qux'}
             ngx.say(testlib.repr(sock:send(tbl)))
             sock:send('\n')
             ngx.say(testlib.repr(sock:receive('*l')))
