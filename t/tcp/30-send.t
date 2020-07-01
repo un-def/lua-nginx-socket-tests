@@ -102,6 +102,33 @@ GET /t
 [false,"bad argument #2 to '?' (non-array table found)"]
 [false,"bad argument #2 to '?' (non-array table found)"]
 
+=== error, bad value - table with non-strings
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: $::MainConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = testlib.tcp(true)
+
+            local tbl = {'foo', nil, 'bar'}
+            for _, value in ipairs({false, testlib.NIL, sock, function() end}) do
+                if value == testlib.NIL then
+                    value = nil
+                end
+                tbl[2] = value
+                ngx.say(testlib.repr(pcall(sock.send, sock, tbl)))
+            end
+        }
+    }
+--- request
+GET /t
+--- response_body
+[false,"bad argument #2 to '?' (bad data type boolean found)"]
+[false,"bad argument #2 to '?' (bad data type nil found)"]
+[false,"bad argument #2 to '?' (bad data type userdata found)"]
+[false,"bad argument #2 to '?' (bad data type function found)"]
+
 === not connected
 --- http_config eval: $Testlib::HttpConfig
 --- main_config eval: $::MainConfig
@@ -175,3 +202,23 @@ GET /t
 --- response_body
 [42]
 ["alfa bravo charlie delta echo foxtrot golf"]
+
+=== ok, nested table with numbers
+--- http_config eval: $Testlib::HttpConfig
+--- main_config eval: $::MainConfig
+--- config
+    location /t {
+        content_by_lua_block {
+            local testlib = require('testlib')
+            local sock = testlib.tcp(true)
+            local tbl = {'foo', {'1.23', {'-432', '0.33'}, 'bar', 'baz'}, 'qux'}
+            ngx.say(testlib.repr(sock:send(tbl)))
+            sock:send('\n')
+            ngx.say(testlib.repr(sock:receive('*l')))
+        }
+    }
+--- request
+GET /t
+--- response_body
+[24]
+["foo1.23-4320.33barbazqux"]
