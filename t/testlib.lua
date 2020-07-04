@@ -36,6 +36,16 @@ _M.rrepr = function(...)
     return repr(...), ...
 end
 
+local nargs = function(...)
+    return select('#', ...)
+end
+
+_M.nargs = nargs
+
+_M.rnargs = function(...)
+    return nargs(...), ...
+end
+
 local tcp_connect = function(sock, host, port, options)
     host = host or _host
     port = port or get_port()

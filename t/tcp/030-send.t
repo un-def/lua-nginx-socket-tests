@@ -56,14 +56,14 @@ GET /t
         content_by_lua_block {
             local testlib = require('testlib')
             local sock = testlib.tcp(true)
-            ngx.say(testlib.repr(pcall(sock.send, sock, sock)))
-            ngx.say(testlib.repr(pcall(sock.send, sock, {'foo', sock})))
+            ngx.say(testlib.repr(pcall(sock.send, sock, sock[1])))
+            ngx.say(testlib.repr(pcall(sock.send, sock, {'foo', sock[1]})))
         }
     }
 --- request
 GET /t
 --- response_body
-[false,"bad argument #2 to '?' (bad data type userdata found)"]
+[false,"bad argument #2 to '?' (string, number, boolean, nil, or array table expected, got userdata)"]
 [false,"bad argument #2 to '?' (bad data type userdata found)"]
 
 === error, bad value - function
@@ -112,7 +112,7 @@ GET /t
             local sock = testlib.tcp(true)
 
             local tbl = {'foo', nil, 'bar'}
-            for _, value in ipairs({false, testlib.NIL, sock, function() end}) do
+            for _, value in ipairs({false, testlib.NIL, sock[1], function() end}) do
                 if value == testlib.NIL then
                     value = nil
                 end
